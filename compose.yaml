@@ -1,0 +1,52 @@
+name: central-ai-hub
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: centralai-open-webui
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${OPEN_WEBUI_HOST_PORT:-3000}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      WEBUI_SECRET_KEY: "${WEBUI_SECRET_KEY}"
+      ENABLE_OPENAI_API: "True"
+      OPENAI_API_BASE_URLS: "${LM_STUDIO_BASE_URL:-http://host.docker.internal:1234/v1}"
+      OPENAI_API_KEYS: "${LM_STUDIO_API_KEY:-lm-studio}"
+      ENABLE_WEB_SEARCH: "True"
+      WEB_SEARCH_ENGINE: "searxng"
+      WEB_SEARCH_RESULT_COUNT: "5"
+      WEB_SEARCH_CONCURRENT_REQUESTS: "5"
+      SEARXNG_QUERY_URL: "http://searxng:8080/search?q=<query>"
+    volumes:
+      - open-webui-data:/app/backend/data
+    depends_on:
+      - searxng
+    networks:
+      - centralai
+
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    container_name: centralai-searxng
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${SEARXNG_HOST_PORT:-8081}:8080"
+    environment:
+      SEARXNG_BASE_URL: "http://localhost:${SEARXNG_HOST_PORT:-8081}/"
+      SEARXNG_SECRET: "${SEARXNG_SECRET}"
+    volumes:
+      - ./services/searxng/settings.yml:/etc/searxng/settings.yml:ro
+      - searxng-cache:/var/cache/searxng
+    networks:
+      - centralai
+
+networks:
+  centralai:
+    name: centralai
+
+volumes:
+  open-webui-data:
+    name: centralai-open-webui-data
+  searxng-cache:
+    name: centralai-searxng-cache
