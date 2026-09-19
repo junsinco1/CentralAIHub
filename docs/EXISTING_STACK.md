@@ -62,35 +62,39 @@ Any credentials/configuration may therefore be provided through runtime configur
 
 `open-webui` is attached to both `bridge` and `local-ai`, allowing it to participate in the shared AI-service network while retaining its other Docker connectivity.
 
-## Important consequence
+## Origin / management model
 
-Do **not** run the fresh-install Compose stack yet.
+No `com.docker.compose.*` labels were present on any of the four containers.
 
-The repository's `compose.yaml` remains a reproducible fallback/reference for a clean installation, but the existing containers should be preserved until their origin/Compose metadata is documented.
+Therefore they should be treated as **manually created/non-Compose-managed containers** unless later evidence shows another manager created them.
 
-`scripts/start.ps1` intentionally detects existing `open-webui` or `searxng` containers and refuses to create duplicates.
+CentralAIHub will not replace them merely to force them under Compose management. The current containers are healthy, persistent, and already connected through `local-ai`.
 
-## Remaining inventory item
-
-Container origin / Compose metadata is still required.
-
-Run:
-
-```powershell
-docker inspect open-webui searxng github-mcp twilio-readonly --format '{{.Name}} | compose_project={{index .Config.Labels "com.docker.compose.project"}} | compose_workdir={{index .Config.Labels "com.docker.compose.project.working_dir"}} | compose_files={{index .Config.Labels "com.docker.compose.project.config_files"}}'
-```
-
-This reveals whether the containers came from Docker Compose and, if so, which project/workdir/config file created them.
+The repository's `compose.yaml` is a clean-install/recovery reference, not the active manager for these running containers.
 
 ## Adoption rule
 
-Until the origin inventory is complete:
+Preserve the running stack:
 
-- do not recreate the containers
+- do not recreate the containers without a migration plan
 - do not rename them
 - do not delete their volumes
-- do not run `docker compose down -v`
+- do not run `docker compose down -v` against a replacement stack
 - do not replace Open WebUI's data directory
 - do not replace SearXNG's configuration
+- do not dump container environment variables into Git, logs, or chat
 
-Once origin metadata is mapped, CentralAIHub can document or manage the existing stack without risking existing accounts/settings.
+CentralAIHub can manage the current installation operationally through documented container names and safe scripts without rebuilding it.
+
+## Next step
+
+Validate each existing service from the user side:
+
+1. Open WebUI loads on port 3000
+2. Open WebUI can chat with LM Studio models
+3. SearXNG loads on port 8080
+4. Open WebUI web search successfully uses SearXNG
+5. GitHub MCP responds through the existing integration
+6. Twilio read-only responds through the existing integration
+
+Only missing capabilities should be added. Working services should not be rebuilt.
