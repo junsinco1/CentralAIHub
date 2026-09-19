@@ -167,3 +167,14 @@ Existing `github-mcp` and `twilio-readonly` stay connected to CentralAIHub for c
 ## Next task
 
 Register the verified Supabase and Render OpenAPI adapters in Open WebUI, then document the connected tool layer while preserving this project-write boundary.
+
+
+## Open WebUI tool routing verified — 2026-09-18
+
+Qwen3.5 9B successfully called the live Supabase, Render, and Twilio read-only tools from Open WebUI.
+
+The backend/OpenAPI wiring is therefore verified.
+
+Use `docs/CENTRALAIHUB_QWEN_PROMPT.md` as the system prompt for a dedicated Open WebUI CentralAIHub preset.
+
+Provider tools should be preferred over memory/knowledge retrieval for live service questions.
