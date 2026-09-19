@@ -1,9 +1,9 @@
-$ErrorActionPreference = "Stop"
-
 param(
     [Parameter(Mandatory=$true)]
     [string]$RepoPath
 )
+
+$ErrorActionPreference = "Stop"
 
 $resolved = Resolve-Path $RepoPath -ErrorAction Stop
 
