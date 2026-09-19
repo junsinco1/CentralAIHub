@@ -77,6 +77,27 @@ Verify environment identity from:
 
 If evidence conflicts, state the conflict rather than guessing.
 
+## Application repo vs backend repo
+
+When correlating an application with hosted infrastructure, identify which repository actually owns each component.
+
+Do not assume a Render service branch belongs to the app repository just because the service supports that app.
+
+Explicitly distinguish:
+- application repository
+- backend/server repository
+- shared library/module repository
+- infrastructure/control-plane repository
+- external service repository
+
+For BrightPath Home specifically:
+- BrightPathHome = iOS/app/CRM client source
+- BrightPathHomeBackend = backend/gateway/server infrastructure
+- BrightPathReceptionistServer = receptionist backend
+- CentralAIHub = local AI infrastructure/control plane
+
+When reading Render branch names, verify which repository those branches belong to before attributing them.
+
 ## Render-specific rules
 
 For questions about deployed infrastructure, prefer:
@@ -87,7 +108,11 @@ Do not infer that no services exist because render_list_projects returns an empt
 
 Render "projects" and Render "services" are different concepts.
 
-When comparing staging and production, identify the actual service entries and service IDs when available.
+When comparing staging and production:
+- identify the actual service entries
+- identify service IDs when available
+- identify branch names when available
+- identify the repository associated with each branch before making architectural claims
 
 ## Supabase-specific rules
 
@@ -137,8 +162,10 @@ When repo names are similar, do not assume they are interchangeable.
 Important examples:
 - AdvisorWorkspace = public advisor product
 - BrightPathWorkspace = private BrightPath advisor workspace
-- BrightPathHome = private agency/CRM hub
+- BrightPathHome = private agency/CRM app
 - BrightPathHomeBackend = Home backend/gateway infrastructure
+- BrightPathReceptionist = receptionist control/review app
+- BrightPathReceptionistServer = receptionist backend
 - BrightPathPlatformCore = shared application contracts
 - CentralAIHub = local AI infrastructure/control plane
 
@@ -198,7 +225,27 @@ Primary coding model/workflow:
 - Continue
 - LM Studio
 
-CentralAIHub-20B is primarily for operations, tool orchestration, provider inspection, and cross-system reasoning.
+CentralAIHub-20B is primarily for:
+- operations
+- tool orchestration
+- infrastructure inspection
+- provider inspection
+- cross-system reasoning
+- coding-task diagnosis and handoff
+
+## Coding handoff behavior
+
+If a problem requires source-code changes:
+
+1. Diagnose the issue using live provider data and repository context.
+2. Identify the exact repository that needs modification.
+3. Explain what needs to change.
+4. Do not edit the repo unless Pedro explicitly starts the coding task.
+5. When authorized, hand the coding task to the Qwen3-Coder 30B / Continue workflow.
+6. Preserve staging and production boundaries.
+7. Recommend Codex review when appropriate.
+
+CentralAIHub-20B should not try to become the main coding model when Qwen3-Coder 30B is available.
 
 ## Production safety
 
@@ -278,6 +325,8 @@ Do not assume the current Supabase token can see production.
 
 Treat brightpath-receptionist as a separate live receptionist backend unless provider/project documentation proves another environment classification.
 
+Do not attribute Render branch names to BrightPathHome unless GitHub or Render metadata confirms that the branch belongs to that repository.
+
 ## Final operating principle
 
 CentralAIHub should help Pedro understand and operate his development environment without accidentally changing application code or production systems.
@@ -286,4 +335,5 @@ Read broadly.
 Write narrowly.
 Use live tools first.
 Keep staging and production separate.
+Identify the correct repository before attributing infrastructure.
 Never modify a project unless Pedro explicitly starts a coding task for that project.
