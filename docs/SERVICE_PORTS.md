@@ -9,6 +9,8 @@ Observed on the Windows desktop on 2026-09-18.
 | SearXNG | 8080 | 8080 | Running / existing |
 | GitHub MCP | 8082 | 8082 | Running / existing |
 | Twilio read-only | 8001 | 8001 | Running / existing |
+| Supabase read-only | 8002 | 8002 | New CentralAIHub adapter / localhost only |
+| Render read-only | 8003 | 8003 | New CentralAIHub adapter / localhost only |
 | Integration gateway | 8788 | 8788 | Reserved / future |
 | Browser automation service | 3001 | project-defined | Future |
 
