@@ -14,6 +14,14 @@ function Test-Http([string]$name, [string]$url) {
     }
 }
 
+function Invoke-ContainerPython([string]$container, [string]$code) {
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($code)
+    $encoded = [Convert]::ToBase64String($bytes)
+    $runner = "import base64;exec(base64.b64decode('$encoded'))"
+    docker exec $container python -c $runner
+    return $LASTEXITCODE
+}
+
 Write-Host ""
 Write-Host "[1/5] Host endpoints"
 
@@ -44,8 +52,8 @@ with urllib.request.urlopen(u, timeout=8) as r:
 '@
 
 try {
-    docker exec open-webui python -c $lmPython
-    if ($LASTEXITCODE -eq 0) {
+    $exitCode = Invoke-ContainerPython "open-webui" $lmPython
+    if ($exitCode -eq 0) {
         Write-Host "Open WebUI container can reach LM Studio." -ForegroundColor Green
     } else {
         Write-Warning "Open WebUI container could not reach LM Studio."
@@ -68,8 +76,8 @@ with urllib.request.urlopen(u, timeout=15) as r:
 '@
 
 try {
-    docker exec open-webui python -c $searchPython
-    if ($LASTEXITCODE -eq 0) {
+    $exitCode = Invoke-ContainerPython "open-webui" $searchPython
+    if ($exitCode -eq 0) {
         Write-Host "Open WebUI container can reach SearXNG JSON search." -ForegroundColor Green
     } else {
         Write-Warning "Open WebUI container could not complete a SearXNG JSON search."
