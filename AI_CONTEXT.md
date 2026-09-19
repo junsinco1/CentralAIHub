@@ -118,8 +118,18 @@ InfiniteTalk is complete and out of scope for CentralAIHub setup.
 
 **Core baseline verified.**
 
-Open WebUI, LM Studio, and SearXNG were validated end to end. GitHub MCP and Twilio read-only are running on the shared `local-ai` network.
+Open WebUI, LM Studio, and SearXNG were validated end to end.
 
-See `docs/BASELINE_VERIFIED.md`.
+The existing `github-mcp` and `twilio-readonly` containers are **frozen/out of scope for CentralAIHub changes**. They belong to another unfinished project and must be left for Codex/that project to manage.
 
-Next task: validate the existing GitHub MCP and Twilio read-only service interfaces without printing or exposing runtime secrets. After that, add only the missing Supabase and Render integrations.
+CentralAIHub now owns two new isolated adapters:
+- `supabase-readonly`
+- `render-readonly`
+
+Both expose GET-only provider operations, join `local-ai`, and bind host test ports to localhost only.
+
+See:
+- `docs/BASELINE_VERIFIED.md`
+- `docs/READ_ONLY_INTEGRATIONS.md`
+
+Next task: configure local provider credentials and validate the new Supabase/Render adapters.
