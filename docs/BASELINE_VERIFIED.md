@@ -75,3 +75,22 @@ The existing `twilio-readonly` service exposes OpenAPI paths `/phone-numbers`, `
 Its OpenAPI document currently declares no `securitySchemes` and those GET operations do not declare security. The container is also published on all host interfaces at port 8001.
 
 Runtime unauthenticated access is **not yet confirmed** because earlier automated status probes were inconclusive. Until a direct status-only request is verified, treat port 8001 as potentially unauthenticated and do not expose it beyond the trusted host/network.
+
+
+## Confirmed Twilio read-only exposure — 2026-09-18
+
+Direct status-only requests from the Windows host confirmed:
+
+- `GET /phone-numbers` -> HTTP 200 with no authentication
+- `GET /calls` -> HTTP 500 with no authentication challenge
+
+This means the existing `twilio-readonly` service is reachable without an auth gate on at least part of its API surface.
+
+Because the container is published as `0.0.0.0:8001->8001` and `[::]:8001->8001`, treat this as a local-network exposure risk.
+
+Immediate rule:
+
+- do not expose port 8001 beyond the host
+- preserve the `local-ai` Docker network so Open WebUI/other local containers can still reach the service by container name
+- prefer rebinding host publication to `127.0.0.1:8001` only, or removing host publication entirely if host access is unnecessary
+- do not proceed to additional external integrations until this exposure is corrected
