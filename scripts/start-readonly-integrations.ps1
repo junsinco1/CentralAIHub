@@ -21,35 +21,33 @@ try {
     exit 1
 }
 
-foreach ($name in "supabase-readonly", "render-readonly") {
-    $existing = docker ps -a --filter "name=^/$name$" --format "{{.Names}}"
-    if ($existing) {
-        Write-Host "$name already exists and will be managed by compose.integrations.yaml." -ForegroundColor DarkGray
-    }
-}
-
 Write-Host "Building and starting only CentralAIHub-owned read-only integrations..." -ForegroundColor Cyan
 docker compose -f $composeFile up -d --build
 
 Write-Host ""
 docker compose -f $composeFile ps
 
+function Wait-Health([string]$name, [string]$url) {
+    for ($i = 1; $i -le 10; $i++) {
+        try {
+            $r = Invoke-RestMethod -Uri $url -TimeoutSec 5
+            Write-Host ("{0}: status={1}, configured={2}" -f $name, $r.status, $r.configured) -ForegroundColor Green
+            return $true
+        } catch {
+            if ($i -lt 10) {
+                Start-Sleep -Seconds 1
+            }
+        }
+    }
+
+    Write-Warning ("{0} health check did not become ready." -f $name)
+    return $false
+}
+
 Write-Host ""
 Write-Host "Health checks:" -ForegroundColor Cyan
-
-try {
-    $supabase = Invoke-RestMethod -Uri "http://127.0.0.1:8002/health" -TimeoutSec 8
-    Write-Host ("Supabase adapter: status={0}, configured={1}" -f $supabase.status, $supabase.configured)
-} catch {
-    Write-Warning ("Supabase adapter health failed: " + $_.Exception.Message)
-}
-
-try {
-    $render = Invoke-RestMethod -Uri "http://127.0.0.1:8003/health" -TimeoutSec 8
-    Write-Host ("Render adapter: status={0}, configured={1}" -f $render.status, $render.configured)
-} catch {
-    Write-Warning ("Render adapter health failed: " + $_.Exception.Message)
-}
+Wait-Health "Supabase adapter" "http://127.0.0.1:8002/health" | Out-Null
+Wait-Health "Render adapter" "http://127.0.0.1:8003/health" | Out-Null
 
 Write-Host ""
-Write-Host "This script does not modify github-mcp, twilio-readonly, open-webui, or searxng."
+Write-Host "This script does not modify github-mcp, twilio-readonly, open-webui, searxng, or any application repository."
