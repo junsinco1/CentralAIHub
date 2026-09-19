@@ -86,15 +86,19 @@ Preserve the running stack:
 
 CentralAIHub can manage the current installation operationally through documented container names and safe scripts without rebuilding it.
 
-## Next step
+## Validation status
 
-Validate each existing service from the user side:
+Verified:
 
-1. Open WebUI loads on port 3000
-2. Open WebUI can chat with LM Studio models
-3. SearXNG loads on port 8080
-4. Open WebUI web search successfully uses SearXNG
-5. GitHub MCP responds through the existing integration
-6. Twilio read-only responds through the existing integration
+1. Open WebUI host endpoint: HTTP 200
+2. LM Studio host endpoint: reachable
+3. SearXNG host endpoint: HTTP 200
+4. Open WebUI container -> LM Studio: HTTP 200
+5. Open WebUI container -> SearXNG JSON search: HTTP 200 with results
+6. GitHub MCP container: running
+7. Twilio read-only container: running
+8. shared `local-ai` network contains all four containers
 
-Only missing capabilities should be added. Working services should not be rebuilt.
+The core AI/search baseline is complete.
+
+The next inventory is limited to the safe interface/runtime shape of the two integration containers.
