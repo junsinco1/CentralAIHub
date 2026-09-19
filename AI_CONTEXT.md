@@ -23,6 +23,30 @@ Current known hardware/workflow:
 - Tailscale for remote access
 - MacBook Air is a remote client/backup environment
 
+## Verified local status — 2026-09-18
+
+Windows diagnostics confirmed:
+
+- Docker 29.8.0
+- Docker Compose v5.5.1
+- LM Studio reachable at `127.0.0.1:1234`
+- existing `open-webui` container on host port 3000
+- existing `searxng` container on host port 8080
+- existing `github-mcp` container on host port 8082
+- existing `twilio-readonly` container on host port 8001
+
+LM Studio reported:
+- qwen3-coder-30b-a3b-instruct
+- qwen2.5-coder-14b-instruct
+- qwen/qwen3.5-9b
+- google/gemma-4-e4b
+- openai/gpt-oss-20b
+- text-embedding-nomic-embed-text-v1.5
+
+Therefore CentralAIHub is in **adoption mode**, not fresh-install mode. Preserve the existing containers and their persistent storage until their origin/mount/network metadata is documented.
+
+See `docs/EXISTING_STACK.md`.
+
 ## Model roles
 
 ### Heavy local coding
@@ -92,6 +116,6 @@ InfiniteTalk is complete and out of scope for CentralAIHub setup.
 
 ## Current phase
 
-Foundation and validation.
+Adopt and document the already-running Windows AI stack without disrupting it.
 
-Next work should validate the Windows environment before adding live service configuration.
+Next task: record safe container origin, mount, network, and restart-policy metadata. Do not inspect or print container environment variables into chat because they may contain secrets.
