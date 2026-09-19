@@ -1,0 +1,30 @@
+name: centralai-readonly-integrations
+
+services:
+  supabase-readonly:
+    build:
+      context: ./services/integrations/supabase-readonly
+    container_name: supabase-readonly
+    restart: unless-stopped
+    env_file:
+      - .env.integrations
+    ports:
+      - "127.0.0.1:8002:8002"
+    networks:
+      - local-ai
+
+  render-readonly:
+    build:
+      context: ./services/integrations/render-readonly
+    container_name: render-readonly
+    restart: unless-stopped
+    env_file:
+      - .env.integrations
+    ports:
+      - "127.0.0.1:8003:8003"
+    networks:
+      - local-ai
+
+networks:
+  local-ai:
+    external: true
