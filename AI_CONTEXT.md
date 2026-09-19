@@ -132,4 +132,38 @@ See:
 - `docs/BASELINE_VERIFIED.md`
 - `docs/READ_ONLY_INTEGRATIONS.md`
 
-Next task: configure local provider credentials and validate the new Supabase/Render adapters.
+## Verified provider adapters — 2026-09-18
+
+The CentralAIHub-owned provider adapters are now running and verified:
+
+- `supabase-readonly` -> host `127.0.0.1:8002`
+- `render-readonly` -> host `127.0.0.1:8003`
+
+Verified HTTP 200:
+- Supabase `/health`
+- Supabase `/organizations`
+- Supabase `/projects`
+- Render `/health`
+- Render `/workspaces`
+- Render `/services`
+
+Both containers join the existing `local-ai` network and their host ports bind to localhost only.
+
+## Project modification policy
+
+CentralAIHub infrastructure work must treat all application repositories as **read-only by default**.
+
+Reading README files, AI_CONTEXT files, manifests, source, issues, deployment metadata, and project state for context is allowed.
+
+Writing to an application repository is allowed only when Pedro intentionally starts a coding task for that specific project, for example:
+- opening `BrightPathHome` in VS Code
+- using Continue + Qwen to implement/fix code
+- explicitly asking Codex to review or modify that project
+
+Infrastructure setup, tool wiring, provider integration, search configuration, and hub maintenance are never sufficient authorization to edit an application repository.
+
+Existing `github-mcp` and `twilio-readonly` stay connected to CentralAIHub for context/tool access but are not to be recreated or reconfigured by this infrastructure project.
+
+## Next task
+
+Register the verified Supabase and Render OpenAPI adapters in Open WebUI, then document the connected tool layer while preserving this project-write boundary.
