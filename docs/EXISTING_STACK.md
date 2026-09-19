@@ -24,45 +24,67 @@ Models reported by LM Studio:
 - `openai/gpt-oss-20b`
 - `text-embedding-nomic-embed-text-v1.5`
 
+## Verified persistence and topology
+
+### Open WebUI
+- Persistent named volume: `open-webui`
+- Mounted to: `/app/backend/data`
+- Networks: `bridge`, `local-ai`
+- Restart policy: `unless-stopped`
+
+This volume contains the Open WebUI application data and must be preserved.
+
+### SearXNG
+- Persistent volume mounted to `/etc/searxng`
+- Persistent cache volume mounted to `/var/cache/searxng`
+- Network: `local-ai`
+- Restart policy: `unless-stopped`
+
+The two volume IDs currently appear Docker-generated/anonymous. Do not delete or replace them until the current SearXNG configuration has been captured safely.
+
+### GitHub MCP
+- No filesystem mount observed
+- Network: `local-ai`
+- Restart policy: `unless-stopped`
+
+Any authentication/configuration may therefore be provided through runtime configuration rather than a mounted data directory. Do not print environment variables into logs or chat while inventorying it.
+
+### Twilio read-only
+- No filesystem mount observed
+- Network: `local-ai`
+- Restart policy: `unless-stopped`
+
+Any credentials/configuration may therefore be provided through runtime configuration rather than a mounted data directory. Do not print environment variables into logs or chat while inventorying it.
+
+### Shared Docker network
+
+`searxng`, `github-mcp`, and `twilio-readonly` share the `local-ai` network.
+
+`open-webui` is attached to both `bridge` and `local-ai`, allowing it to participate in the shared AI-service network while retaining its other Docker connectivity.
+
 ## Important consequence
 
 Do **not** run the fresh-install Compose stack yet.
 
-The repository's `compose.yaml` remains a reproducible fallback/reference for a clean installation, but the existing containers should be preserved until their origin, mounts, networks, and persistence are documented.
+The repository's `compose.yaml` remains a reproducible fallback/reference for a clean installation, but the existing containers should be preserved until their origin/Compose metadata is documented.
 
 `scripts/start.ps1` intentionally detects existing `open-webui` or `searxng` containers and refuses to create duplicates.
 
-## Safe adoption inventory
+## Remaining inventory item
 
-Run the following commands on Windows. They intentionally avoid printing container environment variables because those may contain secrets.
+Container origin / Compose metadata is still required.
 
-### Container origin / Compose metadata
+Run:
 
 ```powershell
 docker inspect open-webui searxng github-mcp twilio-readonly --format '{{.Name}} | compose_project={{index .Config.Labels "com.docker.compose.project"}} | compose_workdir={{index .Config.Labels "com.docker.compose.project.working_dir"}} | compose_files={{index .Config.Labels "com.docker.compose.project.config_files"}}'
 ```
 
-### Mounts / persistent storage
-
-```powershell
-docker inspect open-webui searxng github-mcp twilio-readonly --format '{{.Name}}{{range .Mounts}} | {{.Type}}:{{.Source}} -> {{.Destination}}{{end}}'
-```
-
-### Networks
-
-```powershell
-docker inspect open-webui searxng github-mcp twilio-readonly --format '{{.Name}} | networks={{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'
-```
-
-### Restart policy
-
-```powershell
-docker inspect open-webui searxng github-mcp twilio-readonly --format '{{.Name}} | restart={{.HostConfig.RestartPolicy.Name}}'
-```
+This reveals whether the containers came from Docker Compose and, if so, which project/workdir/config file created them.
 
 ## Adoption rule
 
-Until this inventory is complete:
+Until the origin inventory is complete:
 
 - do not recreate the containers
 - do not rename them
@@ -71,4 +93,4 @@ Until this inventory is complete:
 - do not replace Open WebUI's data directory
 - do not replace SearXNG's configuration
 
-Once the current stack is mapped, CentralAIHub can document or manage it without risking existing accounts/settings.
+Once origin metadata is mapped, CentralAIHub can document or manage the existing stack without risking existing accounts/settings.
