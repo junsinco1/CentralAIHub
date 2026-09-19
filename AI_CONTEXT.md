@@ -116,6 +116,10 @@ InfiniteTalk is complete and out of scope for CentralAIHub setup.
 
 ## Current phase
 
-Adopt and document the already-running Windows AI stack without disrupting it.
+**Core baseline verified.**
 
-Next task: record safe container origin, mount, network, and restart-policy metadata. Do not inspect or print container environment variables into chat because they may contain secrets.
+Open WebUI, LM Studio, and SearXNG were validated end to end. GitHub MCP and Twilio read-only are running on the shared `local-ai` network.
+
+See `docs/BASELINE_VERIFIED.md`.
+
+Next task: validate the existing GitHub MCP and Twilio read-only service interfaces without printing or exposing runtime secrets. After that, add only the missing Supabase and Render integrations.
