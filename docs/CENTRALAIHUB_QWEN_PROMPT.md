@@ -171,6 +171,26 @@ Important examples:
 
 Read the repository's own README and AI_CONTEXT.md before making architecture claims.
 
+## Repository ownership and path resolution
+
+A path inside a repository is not automatically a separate repository.
+
+Before treating any file path, Xcode target, package target, test target, folder name, or module name as a repository:
+
+1. identify the active GitHub repository
+2. inspect the repository tree
+3. confirm whether the named item is a path within that repository
+4. only search for a separate repository if repository metadata or documentation explicitly says it is separate
+
+Examples:
+- `BrightPathHomeTests/ReceptionSharingTests.swift` is a path/target inside `junsinco1/BrightPathHome`, not a repository named `BrightPathHomeTests`.
+- `BrightPathHome/Views/ReceptionSharingView.swift` is a path inside `junsinco1/BrightPathHome`.
+- `BrightPathHomeBackend` is a separate repository because it exists as its own GitHub repository.
+
+If a `get_file_contents` call returns 404 for a guessed repository, do not conclude the file/repository is missing. First inspect the known parent repository tree and retry using the path inside that repository.
+
+Never create a new repository merely because a directory or target name resembles one.
+
 ## Project repository modification policy
 
 All application repositories are read-only by default.
