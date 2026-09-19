@@ -1,35 +1,60 @@
 $ErrorActionPreference = "Continue"
 
 Write-Host ""
-Write-Host "=== CentralAIHub integration security probe v2 ===" -ForegroundColor Cyan
+Write-Host "=== CentralAIHub integration security probe v3 ===" -ForegroundColor Cyan
 Write-Host "No credentials or response bodies are printed." -ForegroundColor DarkGray
 
-function Get-HttpCode([string]$Url, [string]$Method = "GET", [string]$Body = $null, [string[]]$Headers = @()) {
-    $argList = @("-sS", "-o", "$env:TEMP\centralaihub-probe.tmp", "-w", "%{http_code}", "-X", $Method)
-
-    foreach ($h in $Headers) {
-        $argList += @("-H", $h)
-    }
-
-    if ($Body -ne $null) {
-        $argList += @("--data-binary", $Body)
-    }
-
-    $argList += $Url
+function Get-StatusOnly {
+    param(
+        [Parameter(Mandatory=$true)][string]$Uri,
+        [string]$Method = "GET",
+        [string]$Body = $null,
+        [hashtable]$Headers = @{}
+    )
 
     try {
-        $status = & curl.exe @argList
-        $exitCode = $LASTEXITCODE
-        Remove-Item "$env:TEMP\centralaihub-probe.tmp" -ErrorAction SilentlyContinue
+        $req = [System.Net.HttpWebRequest]::Create($Uri)
+        $req.Method = $Method
+        $req.Timeout = 8000
+        $req.AllowAutoRedirect = $false
 
-        if ($exitCode -ne 0) {
-            return "curl-exit-$exitCode"
+        foreach ($key in $Headers.Keys) {
+            switch ($key.ToLowerInvariant()) {
+                "accept" { $req.Accept = $Headers[$key] }
+                "content-type" { $req.ContentType = $Headers[$key] }
+                default { $req.Headers[$key] = $Headers[$key] }
+            }
         }
 
-        return $status
+        if ($Body -ne $null) {
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($Body)
+            $req.ContentLength = $bytes.Length
+            $stream = $req.GetRequestStream()
+            try {
+                $stream.Write($bytes, 0, $bytes.Length)
+            } finally {
+                $stream.Dispose()
+            }
+        }
+
+        $resp = $req.GetResponse()
+        try {
+            return [int]$resp.StatusCode
+        } finally {
+            $resp.Close()
+        }
+    }
+    catch [System.Net.WebException] {
+        if ($_.Exception.Response) {
+            try {
+                return [int]$_.Exception.Response.StatusCode
+            } finally {
+                $_.Exception.Response.Close()
+            }
+        }
+        return "network-error"
     }
     catch {
-        Remove-Item "$env:TEMP\centralaihub-probe.tmp" -ErrorAction SilentlyContinue
         return "exception"
     }
 }
@@ -37,30 +62,30 @@ function Get-HttpCode([string]$Url, [string]$Method = "GET", [string]$Body = $nu
 Write-Host ""
 Write-Host "[1/4] GitHub MCP GET status"
 
-foreach ($url in @(
+foreach ($uri in @(
     "http://127.0.0.1:8082/",
     "http://127.0.0.1:8082/mcp",
     "http://127.0.0.1:8082/.well-known/oauth-protected-resource"
 )) {
-    $status = Get-HttpCode $url "GET"
-    Write-Host ("{0} -> HTTP {1}" -f $url, $status)
+    $status = Get-StatusOnly -Uri $uri -Method "GET"
+    Write-Host ("{0} -> HTTP {1}" -f $uri, $status)
 }
 
 Write-Host ""
 Write-Host "[2/4] GitHub MCP safe initialize POST"
 
 $initBody = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"centralaihub-probe","version":"1.0"}}}'
-$headers = @(
-    "Content-Type: application/json",
-    "Accept: application/json, text/event-stream"
-)
+$postHeaders = @{
+    "Accept" = "application/json, text/event-stream"
+    "Content-Type" = "application/json"
+}
 
-foreach ($url in @(
+foreach ($uri in @(
     "http://127.0.0.1:8082/",
     "http://127.0.0.1:8082/mcp"
 )) {
-    $status = Get-HttpCode $url "POST" $initBody $headers
-    Write-Host ("POST {0} -> HTTP {1}" -f $url, $status)
+    $status = Get-StatusOnly -Uri $uri -Method "POST" -Body $initBody -Headers $postHeaders
+    Write-Host ("POST {0} -> HTTP {1}" -f $uri, $status)
 }
 
 Write-Host ""
@@ -71,9 +96,9 @@ foreach ($path in @(
     "/calls",
     "/messages"
 )) {
-    $url = "http://127.0.0.1:8001" + $path
-    $status = Get-HttpCode $url "GET"
-    Write-Host ("{0} -> HTTP {1}" -f $url, $status)
+    $uri = "http://127.0.0.1:8001" + $path
+    $status = Get-StatusOnly -Uri $uri -Method "GET"
+    Write-Host ("{0} -> HTTP {1}" -f $uri, $status)
 }
 
 Write-Host ""
