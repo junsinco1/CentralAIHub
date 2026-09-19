@@ -66,3 +66,12 @@ The repository `compose.yaml` remains a clean-install/recovery reference rather 
 4. add Supabase read-only/status integration
 5. add Render read-only/status integration
 6. add browser automation only after the controlled integration layer is stable
+
+
+## Twilio security note
+
+The existing `twilio-readonly` service exposes OpenAPI paths `/phone-numbers`, `/calls`, `/messages`, and `/messages/{message_sid}`.
+
+Its OpenAPI document currently declares no `securitySchemes` and those GET operations do not declare security. The container is also published on all host interfaces at port 8001.
+
+Runtime unauthenticated access is **not yet confirmed** because earlier automated status probes were inconclusive. Until a direct status-only request is verified, treat port 8001 as potentially unauthenticated and do not expose it beyond the trusted host/network.
