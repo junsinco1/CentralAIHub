@@ -18,8 +18,15 @@ function Invoke-ContainerPython([string]$container, [string]$code) {
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($code)
     $encoded = [Convert]::ToBase64String($bytes)
     $runner = "import base64;exec(base64.b64decode('$encoded'))"
-    docker exec $container python -c $runner
-    return $LASTEXITCODE
+
+    $output = docker exec $container python -c $runner 2>&1
+    $codeResult = $LASTEXITCODE
+
+    if ($output) {
+        $output | ForEach-Object { Write-Host $_ }
+    }
+
+    return [int]$codeResult
 }
 
 Write-Host ""
@@ -56,7 +63,7 @@ try {
     if ($exitCode -eq 0) {
         Write-Host "Open WebUI container can reach LM Studio." -ForegroundColor Green
     } else {
-        Write-Warning "Open WebUI container could not reach LM Studio."
+        Write-Warning ("Open WebUI container could not reach LM Studio. docker exit=" + $exitCode)
     }
 } catch {
     Write-Warning ("Open WebUI -> LM Studio test failed: " + $_.Exception.Message)
@@ -80,7 +87,7 @@ try {
     if ($exitCode -eq 0) {
         Write-Host "Open WebUI container can reach SearXNG JSON search." -ForegroundColor Green
     } else {
-        Write-Warning "Open WebUI container could not complete a SearXNG JSON search."
+        Write-Warning ("Open WebUI container could not complete a SearXNG JSON search. docker exit=" + $exitCode)
     }
 } catch {
     Write-Warning ("Open WebUI -> SearXNG test failed: " + $_.Exception.Message)
