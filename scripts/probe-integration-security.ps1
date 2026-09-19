@@ -1,30 +1,36 @@
 $ErrorActionPreference = "Continue"
 
 Write-Host ""
-Write-Host "=== CentralAIHub integration security probe ===" -ForegroundColor Cyan
-Write-Host "No credentials or environment variables are printed." -ForegroundColor DarkGray
+Write-Host "=== CentralAIHub integration security probe v2 ===" -ForegroundColor Cyan
+Write-Host "No credentials or response bodies are printed." -ForegroundColor DarkGray
 
-function Get-CurlStatus([string]$Url, [string]$Method = "GET", [string]$Body = $null, [string[]]$Headers = @()) {
-    $args = @("-sS", "-o", "NUL", "-w", "%{http_code}", "-X", $Method)
+function Get-HttpCode([string]$Url, [string]$Method = "GET", [string]$Body = $null, [string[]]$Headers = @()) {
+    $argList = @("-sS", "-o", "$env:TEMP\centralaihub-probe.tmp", "-w", "%{http_code}", "-X", $Method)
 
     foreach ($h in $Headers) {
-        $args += @("-H", $h)
+        $argList += @("-H", $h)
     }
 
     if ($Body -ne $null) {
-        $args += @("--data-binary", $Body)
+        $argList += @("--data-binary", $Body)
     }
 
-    $args += $Url
+    $argList += $Url
 
     try {
-        $status = & curl.exe @args 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            return "curl-error"
+        $status = & curl.exe @argList
+        $exitCode = $LASTEXITCODE
+        Remove-Item "$env:TEMP\centralaihub-probe.tmp" -ErrorAction SilentlyContinue
+
+        if ($exitCode -ne 0) {
+            return "curl-exit-$exitCode"
         }
+
         return $status
-    } catch {
-        return "curl-error"
+    }
+    catch {
+        Remove-Item "$env:TEMP\centralaihub-probe.tmp" -ErrorAction SilentlyContinue
+        return "exception"
     }
 }
 
@@ -36,7 +42,7 @@ foreach ($url in @(
     "http://127.0.0.1:8082/mcp",
     "http://127.0.0.1:8082/.well-known/oauth-protected-resource"
 )) {
-    $status = Get-CurlStatus $url "GET"
+    $status = Get-HttpCode $url "GET"
     Write-Host ("{0} -> HTTP {1}" -f $url, $status)
 }
 
@@ -53,7 +59,7 @@ foreach ($url in @(
     "http://127.0.0.1:8082/",
     "http://127.0.0.1:8082/mcp"
 )) {
-    $status = Get-CurlStatus $url "POST" $initBody $headers
+    $status = Get-HttpCode $url "POST" $initBody $headers
     Write-Host ("POST {0} -> HTTP {1}" -f $url, $status)
 }
 
@@ -66,7 +72,7 @@ foreach ($path in @(
     "/messages"
 )) {
     $url = "http://127.0.0.1:8001" + $path
-    $status = Get-CurlStatus $url "GET"
+    $status = Get-HttpCode $url "GET"
     Write-Host ("{0} -> HTTP {1}" -f $url, $status)
 }
 
@@ -101,5 +107,4 @@ catch {
 }
 
 Write-Host ""
-Write-Host "Reminder: both integration containers are currently published on all host interfaces."
-Write-Host "No network binding changes were made by this probe."
+Write-Host "Probe complete."
