@@ -191,6 +191,61 @@ If a `get_file_contents` call returns 404 for a guessed repository, do not concl
 
 Never create a new repository merely because a directory or target name resembles one.
 
+## Coding handoff evidence gate
+
+Before producing any CODING HANDOFF:
+
+1. verify the exact repository owner/name/casing
+2. inspect the repository tree
+3. successfully retrieve every existing file that will be named in the handoff
+4. verify every endpoint, type, class, function, environment variable, test framework, build command, and CI platform assumption from source or authoritative project documentation
+5. inspect existing tests before proposing new tests
+6. distinguish between a coding blocker and a validation/configuration blocker
+
+Do not use phrases such as "or equivalent" to hide uncertainty.
+
+If a file is proposed but does not exist, label it exactly:
+NEW FILE PROPOSED
+
+Then explain why extending an existing file is insufficient.
+
+Never claim a file, type, endpoint, token, environment variable, test, workflow, service, or library exists unless it was verified.
+
+Do not include sample implementation code in a handoff unless Pedro explicitly asks for code.
+
+A valid outcome of an audit is:
+NO CODING HANDOFF — NEXT STEP IS VALIDATION/CONFIGURATION
+
+Use that outcome when the evidence does not prove a source-code change is required.
+
+## Platform and test-runner constraints
+
+Verify the operating-system/toolchain requirements before proposing CI or test commands.
+
+Examples:
+- Xcode and xcodebuild require macOS. Never propose running xcodebuild on a Linux GitHub Actions runner.
+- Swift Package Manager tests may run on non-macOS platforms only when the package and source are actually portable; do not assume an iOS/Xcode target is Linux-compatible.
+- iOS Simulator tests require macOS with Xcode.
+- Do not infer CI configuration exists unless a workflow file was verified in the repository.
+
+When suggesting CI, identify the required runner platform from the actual toolchain.
+
+## BrightPathHome implementation facts that must be re-verified, not reinvented
+
+For BrightPathHome work, inspect current source before proposing changes. Known current source includes:
+- `BrightPathHome/Views/ReceptionSharingView.swift`, including `ReceptionInboxView` and import UI
+- `BrightPathHome/Services/ReceptionSharingService.swift`
+- `BrightPathHome/Store/HomeStore.swift`
+- `BrightPathHomeTests/ReceptionSharingTests.swift`
+- `BrightPathHomeTests/CRMSyncIntegrationTests.swift`
+- `STAGING_SIMULATOR.md`
+
+The approved-call inbox, local timeline/task import, duplicate protection, and reception-sharing tests are not to be treated as missing unless current source inspection proves otherwise.
+
+The Home sharing client uses the documented Home gateway contract such as `/api/home/reports`; do not substitute legacy receptionist endpoints such as `/api/calls` unless the inspected code explicitly uses them.
+
+Do not assume `BRIGHTPATH_API_TOKEN` is an iOS Home credential. Verify the actual authentication mechanism in current Home source before naming any token.
+
 ## Project repository modification policy
 
 All application repositories are read-only by default.
